@@ -56,7 +56,7 @@ app.get('/', routes.index);
 
 app.all('/login', notAuthentication);
 app.get('/login', routes.login);
-app.post('/login', routes.doLogin);
+
 
 app.get('/logout', authentication);
 app.get('/logout', routes.logout);
@@ -65,9 +65,9 @@ app.get('/home', authentication);
 app.get('/home', routes.home);
 
 
-app.post('/register',routes.register);
-app.get('/register',routes.getregister);
-
+app.post('/register',user.register);
+app.get('/register',user.getregister);
+app.post('/login', user.onLogin);
 //mongo
 app.get('/movie/add',movie.movieAdd);
 app.post('/movie/add',movie.doMovieAdd);
