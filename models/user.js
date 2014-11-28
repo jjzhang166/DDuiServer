@@ -5,7 +5,7 @@ var util = require('util');
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var userSchema = new Schema({
-    userName:String,
+    userName:{ type: String, unique: true },
     password:String,
     email:String,
     create_date: { type: Date, default: Date.now },
@@ -35,8 +35,13 @@ var userSchema = new Schema({
     retrieve_time: {type: Number},
     retrieve_key: {type: String}
 });
-//访问todo对象模型
-mongoose.model('user', userSchema);
+userSchema.index({userName: 1}, {unique: true});
+//访问users对象模型
+
+var User = mongoose.model('user', userSchema);
+exports.getUserByLoginName = function (loginName, callback) {
+    User.findOne({'userName': loginName}, callback);
+};
 module.exports.Schema =function (modelName){
     return{model:mongoose.model(modelName)};
 }

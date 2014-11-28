@@ -2,7 +2,7 @@
 /**
  * Module dependencies.
  */
-
+var config = require('./config');
 var express = require('express')
   , routes = require('./routes')
   , user = require('./routes/user')
@@ -28,13 +28,23 @@ app.use(express.favicon());
 app.use(express.logger('dev'));
 app.use(express.bodyParser());
 app.use(express.methodOverride());
-app.use(express.cookieParser()); 
-app.use(express.cookieSession({secret : 'blog.qtclub.me'}));
+//app.use(express.cookieParser());
+//app.use(express.cookieSession({secret : 'blog.qtclub.me'}));
+//app.use(express.session({
+//  	secret : 'blog.qtclub.me',
+//    store: store,
+//    cookie: { maxAge: 100000 } // expire session in 15 min or 900 seconds
+//}));
+
+app.use(require('cookie-parser')(config.session_secret));
 app.use(express.session({
-  	secret : 'blog.qtclub.me',
-    store: store,
+    secret : config.session_secret,
+    store : store,
+    resave : true,
+    saveUninitialized : true,
     cookie: { maxAge: 100000 } // expire session in 15 min or 900 seconds
 }));
+
 app.use(function(req, res, next){
   res.locals.user = req.session.user;
   var err = req.session.error;
@@ -68,6 +78,9 @@ app.get('/home', routes.home);
 app.post('/register',user.register);
 app.get('/register',user.getregister);
 app.post('/login', user.onLogin);
+app.get('/active_account',user.active_account);
+
+
 //mongo
 app.get('/movie/add',movie.movieAdd);
 app.post('/movie/add',movie.doMovieAdd);

@@ -5,6 +5,11 @@
 "use strict";
 var userDBModel = require('../models/user.js');
 var crypt = require('../utils/crypt.js');
+var validator = require('validator');
+var mail = require('../common/mail');
+var tools = require('../common/tools');
+var utility = require('utility');
+var config = require('../config');
 var user =new userDBModel.Schema("user").model;
 exports.login = function (req, res, next) {
     res.render('login.html',{message:""});
@@ -43,33 +48,49 @@ exports.userManager = function (req,res,next){
 exports.list = function(req, res){
   res.send("respond with a resource");
 };
-function findUserByUsername(username)
-{
-    var queryObj = {userName:username};
-    console.log("findUserByUsername "+queryObj+" "+username);
-    user.findOne(queryObj,function(err,userInfo){
-        if(err){
-            return false;
-        }else{
-            if(userInfo){
-                console.log("userInfo  "+userInfo)
-                return true;
-            }else{
-                console.log("userInfo222  "+username)
-                return false;
-            }
-        }
-    })
-}
 /**
  * //如果是Post 请使用req.body['argument']来处理数据 参考 https://cnodejs.org/topic/50a333d7637ffa4155c62ddb
  * 用户注册接口,注册之前 检测是否已经注册
 **/
+exports.getUsersByQuery = function (query, opt, callback) {
+    user.find(query, '', opt, callback);
+};
 exports.register=function(req,res){
+    user.find({'$or': [{userName:req.body['username']}]}, {}, function (err, users) {
+        if (err) {
+            return next(err);
+        }
+        if (users.length > 0) {
+            res.send('用户名已经注册');
+            return;
+        }else{
+//是新用户
+            var username = validator.trim(req.body['username']).toLowerCase();
+            var email = validator.trim(req.body['email']).toLowerCase();
+            var pass = validator.trim(req.body['password']);
+            var rePass = validator.trim(req.body['password']);
 
-    if(findUserByUsername(req.body['username'])){
-        res.send('Register information-----------------repeater........');
-    }else{
+            // 验证信息的正确性
+            if ([username, pass, rePass, email].some(function (item) { return item === ''; })) {
+                res.send('信息不完整');
+                return;
+            }
+            if (username.length < 5) {
+                res.send('用户名至少需要5个字符。');
+                return;
+            }
+            if (!tools.validateId(username)) {
+                res.send('用户名不合法。');
+                return;
+            }
+            if (!validator.isEmail(email)) {
+                res.send('邮箱不合法。');
+                return;
+            }
+            if (pass !== rePass) {
+                res.send('两次密码输入不一致。');
+                return;
+            }
         var userEntity = new user();
         userEntity.userName=req.body['username'];
         userEntity.password=crypt.md5(req.body['password']);
@@ -79,18 +100,62 @@ exports.register=function(req,res){
         userEntity.profession = req.body['profession'];
         userEntity.location = req.body['location'];
         userEntity.save(function (err,userInfo){
+            console.log("save..................... "+err);
         if(!err) {
-            console.log(user.name);
-            res.send('Register information..success........');
+            //console.log(userEntity);
+            // 发送激活邮件
+            var tokenstr = utility.md5(email + pass + config.session_secret);
+            mail.sendActiveMail(email,tokenstr , username);
+            console.log("sendActiveMail "+username+" "+pass+" tokenstr is "+tokenstr);
+            res.send('Register information..success........'+userInfo);
         }else{
-            res.send('Register information..error........');
+            res.send('Register information..error........'+userInfo);
         }
-    })
-    }
-    console.log(req.body);
+    })}
+    });
+    //console.log(req.body);
 };
 //如果是Get,请使用query.argument来处理
 exports.getregister = function(req,res){
     console.log(JSON.stringify(req.query.username));
     res.send('getfucker  username is: '+req.query.username+" And passwd: "+req.query.password+ " and he or she is: "+req.query.age +" old");
 }
+
+//账号激活
+exports.active_account = function (req, res, next) {
+    console.log("账号激活 "+req.query.key );
+    var key = req.query.key;
+    var name = req.query.name;
+    user.find({'$or': [{userName:name}]}, {}, function (err, users){
+        if (err) {
+            console.log("error "+err.message );
+            return next(err);
+        }
+        console.log("key "+key+"-------------------"+name);
+        if(name =='undefined')
+        {
+            console.log("信息有误，帐号无法被激活")
+            return res.render('notify/notify', {error: '信息有误，帐号无法被激活。'});
+        }
+        var passhash = user.password;
+        console.log("passwd "+passhash+" "+user.username+" "+user.email);
+        if (!user || utility.md5(user.email + passhash + config.session_secret) !== key) {
+//            return res.render('notify/notify', {error: '信息有误，帐号无法被激活。'});
+            console.log("信息有误，帐号无法被激活2")
+            return res.redirect('/');
+        }
+        if (user.active) {
+            console.log("帐号被激活");
+            return res.redirect('/');
+        }
+        user.active = true;
+        user.save(function (err) {
+            if (err) {
+                return next(err);
+            };
+            var msg = '帐号已被激活,请登录'
+            console.log("帐号已被激活,请登录");
+            return res.redirect('/home');
+        });
+    });
+};

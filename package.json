@@ -9,6 +9,12 @@
   },
   "dependencies": {
     "express": "3.2.2",
-    "ejs": "*"
+    "ejs": "*",
+    "validator": "^3.19.0",
+      "bcrypt": "^0.8.0",
+      "moment": "^2.8.3",
+      "utility": "1.0.0",
+      "cookie-parser": "^1.0.1",
+      "nodemailer": "0.3.43"
   }
 }
