@@ -1,9 +1,9 @@
 
 A simple DDui Server with Nodejs.
 
-![](https://github.com/toby20130333/DDuiServer/tree/master/images/1.png "注册")
-![](https://github.com/toby20130333/DDuiServer/tree/master/images/2.png "主界面")
-![](https://github.com/toby20130333/DDuiServer/tree/master/images/3.png "登录")
+![](https://raw.githubusercontent.com/toby20130333/DDuiServer/master/images/1.png "注册")
+![](https://raw.githubusercontent.com/toby20130333/DDuiServer/master/images/2.png "主界面")
+![](https://raw.githubusercontent.com/toby20130333/DDuiServer/master/images/3.png "登录")
 
 * 跨平台的客户端,基于Qt/QML开发 
 * 后端框架采用Nodejs+Express+mongodb+C++
