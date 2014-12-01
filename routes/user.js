@@ -26,7 +26,19 @@ exports.onLogin = function (req, res, next) {
             res.send('message:登陆失败');
         }else{
             if(userInfo){
-                res.send('message:登录成功');
+                user.update({userName:req.body['username']},{$set:{online:true,update_at:new Date()}},function(err,updateinfo){
+               if(err)
+               {
+                   res.send('message:登陆失败');
+               }else{
+                   if(updateinfo)
+                   {
+                       res.send('message:登录成功222');
+                   }else{
+                       res.send('message:用户名或者密码错误');
+                   }
+               }
+            })
             }else{
                 res.send('message:用户名或者密码错误');
             }
@@ -55,13 +67,17 @@ exports.list = function(req, res){
 exports.getUsersByQuery = function (query, opt, callback) {
     user.find(query, '', opt, callback);
 };
+//{'$or
 exports.register=function(req,res){
-    user.find({'$or': [{userName:req.body['username']}]}, {}, function (err, users) {
+    user.find({'$or': [
+        {'userName':req.body['username']},
+        { 'email':req.body['email']}
+    ]}, {}, function (err, users) {
         if (err) {
             return next(err);
         }
         if (users.length > 0) {
-            res.send('用户名已经注册');
+            res.send('用户名或者邮箱已经注册');
             return;
         }else{
 //是新用户
@@ -100,12 +116,12 @@ exports.register=function(req,res){
         userEntity.profession = req.body['profession'];
         userEntity.location = req.body['location'];
         userEntity.save(function (err,userInfo){
-            console.log("save..................... "+err);
+        console.log("save..................... "+err);
         if(!err) {
             //console.log(userEntity);
             // 发送激活邮件
             var tokenstr = utility.md5(email + pass + config.session_secret);
-            mail.sendActiveMail(email,tokenstr , username);
+            //mail.sendActiveMail(email,tokenstr , username);
             console.log("sendActiveMail "+username+" "+pass+" tokenstr is "+tokenstr);
             res.send('Register information..success........'+userInfo);
         }else{

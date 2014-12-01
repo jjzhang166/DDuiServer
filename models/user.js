@@ -33,7 +33,8 @@ var userSchema = new Schema({
     receive_at_mail: { type: Boolean, default: false },
     sex: { type: Number },
     retrieve_time: {type: Number},
-    retrieve_key: {type: String}
+    retrieve_key: {type: String},
+    online:{type:Boolean,default:false}
 });
 userSchema.index({userName: 1}, {unique: true});
 //访问users对象模型
