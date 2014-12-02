@@ -7,6 +7,7 @@ var express = require('express')
   , routes = require('./routes')
   , user = require('./routes/user')
   , movie = require('./routes/movie')
+  , cities = require("./routes/cities")
   , http = require('http')
   , path = require('path')
   , ejs = require('ejs')
@@ -20,7 +21,7 @@ var store = new SessionStore({
 var app = express();
 
 // all environments
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.PORT || 8080);
 app.set('views', __dirname + '/views');
 app.engine('.html', ejs.__express);
 app.set('view engine', 'html');// app.set('view engine', 'ejs');
@@ -87,7 +88,8 @@ app.post('/movie/add',movie.doMovieAdd);
 app.get('/movie/:name',movie.movieAdd);
 app.get('/movie/json/:name',movie.movieJSON);
 
-
+app.post("/cities",cities.addCities);
+app.post("/findcity",cities.findCities);
 
 app.get('/users', user.list);
 
